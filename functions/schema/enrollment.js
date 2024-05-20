@@ -13,7 +13,7 @@ const EnrollmentChangeSchema = new Schema({
     type: Number,
     required: true,
   },
-  enrollmentCount: {
+  enrollmentRate: {
     type: Number,
     required: true,
   },

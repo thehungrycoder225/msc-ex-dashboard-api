@@ -42,13 +42,64 @@ const resolvers = {
         },
       ]);
     },
-    enrollmentRates: async (_, { year, branch, semester }) => {
+    enrollmentRates: async (_, { filters = {}, groupBy = [] }) => {
       const query = {};
-      if (year) query.year = year;
-      if (branch) query.branch = branch;
-      if (semester) query.semester = semester;
-      return await EnrollmentRate.find(query);
+
+      if (filters.year) query.year = filters.year;
+      if (filters.branch) query.branch = filters.branch;
+      if (filters.semester) query.semester = filters.semester;
+
+      if (groupBy.length === 0) {
+        return await EnrollmentRate.find(query);
+      } else {
+        const group = groupBy.reduce(
+          (acc, field) => ({ ...acc, [field]: `$${field}` }),
+          {}
+        );
+        const project = groupBy.reduce(
+          (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+          { _id: 0, enrollmentRate: 1 }
+        );
+
+        const sort = groupBy.reduce(
+          (acc, field) => ({ ...acc, [field]: 1 }),
+          {}
+        );
+
+        return await EnrollmentRate.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: group,
+              enrollmentRate: { $sum: '$enrollmentRate' },
+            },
+          },
+          { $project: project },
+          { $sort: sort },
+        ]);
+      }
     },
+    // groupedEnrollment: async () => {
+    //   return await EnrollmentRate.aggregate([
+    //     {
+    //       $group: {
+    //         _id: { year: '$year', branch: '$branch' },
+    //         totalEnrollmentRate: { $sum: '$enrollmentRate' },
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         _id: 0,
+    //         year: '$_id.year',
+    //         branch: '$_id.branch',
+    //         totalEnrollmentRate: 1,
+    //       },
+    //     },
+    //     {
+    //       $sort: { year: 1, branch: 1 },
+    //     },
+    //   ]);
+    // },
   },
   Mutation: {
     addOffering: async (_, args) => {

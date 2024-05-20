@@ -5,7 +5,7 @@ const typeDefs = gql`
     offerings: [Offering]
     totalOfferings(year: Int, type: String): Int
     groupedOfferings(year: Int, type: String): [GroupedOffering]
-    enrollmentRates(year: Int, branch: String, semester: String): [Enrollment]
+    enrollmentRates(filters: EnrollmentFilters, groupBy: [String]): [Enrollment]
   }
   type Offering {
     id: ID!
@@ -18,13 +18,27 @@ const typeDefs = gql`
     year: Int!
     branch: String!
     semester: String!
-    rate: Float!
+    enrollmentRate: Float!
   }
+
+  input EnrollmentFilters {
+    year: Int
+    branch: String
+    semester: String
+  }
+
+  enum GroupBy {
+    year
+    branch
+    semester
+  }
+
   type GroupedOffering {
     year: Int!
     type: String!
     count: Int!
   }
+
   type Mutation {
     addOffering(year: Int!, type: String!, count: Int!): Offering
     addEnrollmentRate(
