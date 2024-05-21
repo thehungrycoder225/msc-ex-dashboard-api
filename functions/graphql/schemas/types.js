@@ -1,44 +1,31 @@
 const { gql } = require('apollo-server');
+
 const typeDefs = gql`
   type Query {
-    groupedEnrollment(
-      year: Int
-      branch: String
-      groupBy: [GroupByInput!]
-    ): [GroupedEnrollment!]
-
-    getEnrollmentRate(
-      year: Int
-      branch: String
-      semester: String
-    ): [EnrollmentRate!]
+    getEnrollmentRates(
+      filters: EnrollmentFilters
+      groupBy: [String]
+    ): [Enrollment]
   }
 
-  input GroupByInput {
-    field: String!
-  }
-
-  type GroupedEnrollment {
-    enrollmentRate: Int!
-    year: Int
-    branch: String
-  }
-
-  type EnrollmentRate {
+  type Enrollment {
     id: ID!
     year: Int!
-    semester: Int!
     branch: String!
-    enrollmentRate: Int!
+    semester: String!
+    enrollmentRate: Float!
   }
 
-  type Mutation {
-    addEnrollmentRate(
-      year: Int!
-      branch: String!
-      semester: Int!
-      enrollmentRate: Int!
-    ): EnrollmentRate
+  input EnrollmentFilters {
+    year: Int
+    branch: String
+    semester: String
+  }
+
+  enum GroupBy {
+    year
+    branch
+    semester
   }
 `;
 

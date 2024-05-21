@@ -1,29 +1,14 @@
-const { ApolloServer, gql } = require('apollo-server');
+const { createHandler } = require('graphql-http/lib/use/express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const typeDefs = require('./graphql/typeDefs');
+const { typeDefs } = require('./graphql/typeDefs');
 const resolvers = require('./graphql/resolvers');
+const logger = require('./utils/logger');
+const { dbConnect } = require('./config/db');
+
+const { ApolloServer } = require('apollo-server');
 
 dotenv.config();
-
-const localUri = 'mongodb://localhost:27017/graphql';
-
-const dbConnect = async () => {
-  try {
-    await mongoose.connect(process.env.CLOUD_DB_URI || localUri);
-    if (!mongoose.connection.readyState) {
-      console.log('DB connection failed');
-    } else {
-      if (process.env.CLOUD_DB_URI) {
-        console.log('Cloud database connected');
-        return;
-      }
-      console.log('Local database connected');
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
 dbConnect();
 
 const server = new ApolloServer({

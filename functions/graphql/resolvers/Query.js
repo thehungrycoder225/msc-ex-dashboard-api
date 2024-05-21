@@ -1,66 +1,41 @@
-const EnrollmentRate = require('../../models/enrollment');
+const EnrollmentRate = require('../models/enrollment');
 
 const resolvers = {
-  Query: {
-    groupedEnrollment: async (_, { year, branch, groupBy }) => {
-      const matchStage = {};
-      if (year) matchStage.year = year;
-      if (branch) matchStage.branch = branch;
+  // Enrollment Profile
+  getEnrollmentRates: async (_, { filters = {}, groupBy = [] }) => {
+    const query = {};
 
-      const groupStage = {
-        _id: {},
-        count: { $sum: '$enrollmentRate' },
-      };
+    if (filters.year) query.year = filters.year;
+    if (filters.branch) query.branch = filters.branch;
+    if (filters.semester) query.semester = filters.semester;
 
-      if (groupBy) {
-        groupBy.forEach((group) => {
-          groupStage._id[group.field] = `$${group.field}`;
-        });
-      } else {
-        groupStage._id = null;
-      }
-
-      const projectionStage = {
-        _id: 0,
-        count: { $sum: '$enrollmentRate' },
-      };
-
-      if (groupBy) {
-        groupBy.forEach((group) => {
-          projectionStage[group.field] = `$_id.${group.field}`;
-        });
-      }
-
-      const aggregationPipeline = [
-        { $match: matchStage },
-        { $group: groupStage },
-        { $project: projectionStage },
-      ];
-      return EnrollmentRate.aggregate(aggregationPipeline);
-    },
-
-    getEnrollmentRate: async (_, { year, branch, semester }) => {
-      const query = {};
-      if (year) query.year = year;
-      if (branch) query.branch = branch;
-      if (semester) query.semester = semester;
+    if (groupBy.length === 0) {
       return await EnrollmentRate.find(query);
-    },
-  },
+    } else {
+      const group = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$${field}` }),
+        {}
+      );
 
-  Mutation: {
-    addEnrollmentRate: async (
-      _,
-      { year, branch, semester, enrollmentRate }
-    ) => {
-      const newEnrollmentRate = new EnrollmentRate({
-        year,
-        branch,
-        semester,
-        enrollmentRate,
-      });
-      return await newEnrollmentRate.save();
-    },
+      const project = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+        { _id: 0, enrollmentRate: 1 }
+      );
+
+      const sort = groupBy.reduce((acc, field) => ({ ...acc, [field]: 1 }), {});
+
+      return await EnrollmentRate.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: group,
+            enrollmentRate: { $sum: '$enrollmentRate' },
+          },
+        },
+        { $project: { ...project, enrollmentRate: 1 } },
+        { $sort: sort },
+      ]);
+    }
   },
 };
 

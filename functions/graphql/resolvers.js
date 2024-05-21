@@ -2,6 +2,7 @@ const ProgramOffering = require('../models/offerings');
 const EnrollmentRate = require('../models/enrollment');
 const resolvers = {
   Query: {
+    // Program Offerings Profile
     offerings: async () => {
       return await ProgramOffering.find();
     },
@@ -42,7 +43,8 @@ const resolvers = {
         },
       ]);
     },
-    enrollmentRates: async (_, { filters = {}, groupBy = [] }) => {
+    // Enrollment Profile
+    getEnrollmentRates: async (_, { filters = {}, groupBy = [] }) => {
       const query = {};
 
       if (filters.year) query.year = filters.year;
@@ -56,6 +58,7 @@ const resolvers = {
           (acc, field) => ({ ...acc, [field]: `$${field}` }),
           {}
         );
+
         const project = groupBy.reduce(
           (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
           { _id: 0, enrollmentRate: 1 }
@@ -74,32 +77,13 @@ const resolvers = {
               enrollmentRate: { $sum: '$enrollmentRate' },
             },
           },
-          { $project: project },
+          { $project: { ...project, enrollmentRate: 1 } },
           { $sort: sort },
         ]);
       }
     },
-    // groupedEnrollment: async () => {
-    //   return await EnrollmentRate.aggregate([
-    //     {
-    //       $group: {
-    //         _id: { year: '$year', branch: '$branch' },
-    //         totalEnrollmentRate: { $sum: '$enrollmentRate' },
-    //       },
-    //     },
-    //     {
-    //       $project: {
-    //         _id: 0,
-    //         year: '$_id.year',
-    //         branch: '$_id.branch',
-    //         totalEnrollmentRate: 1,
-    //       },
-    //     },
-    //     {
-    //       $sort: { year: 1, branch: 1 },
-    //     },
-    //   ]);
-    // },
+
+    // Graduates Profile
   },
   Mutation: {
     addOffering: async (_, args) => {
