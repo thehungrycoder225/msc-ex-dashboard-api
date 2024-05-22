@@ -22,6 +22,31 @@ type Query {
     groupBy: [GroupBy]
   ): [Accreditation]
 
+  getCopcProfile(
+    filters: CopcFilters
+    groupBy: [GroupBy]
+  ): [Copc]
+
+  getFacultyEmploymentStatusProfile(
+    filters: FacultyProfileFilters
+    groupBy: [GroupBy]
+  ): [FacultyEmploymentStatus]
+
+  getFacultyEmploymentTypeProfile(
+    filters: FacultyProfileFilters
+    groupBy: [GroupBy]
+  ): [FacultyEmploymentType]
+
+  getFacultyEducationalAttainmentProfile(
+    filters: FacultyProfileFilters
+    groupBy: [GroupBy]
+  ): [FacultyEducationalAttainment]
+
+  getFacultyAcademicRankProfile(
+    filters: FacultyProfileFilters
+    groupBy: [GroupBy]
+  ): [FacultyAcademicRank]
+
 }
 
 
@@ -29,6 +54,7 @@ enum GroupBy {
   year
   branch
   semester
+  category
 }
 
   type Offering {
@@ -83,6 +109,55 @@ input GraduationFilters {
     category: String
     program: String
   }
+
+  type Copc {
+    id: ID!
+    year: Int!
+    category: String!
+    count: Int!
+  }
+
+  input CopcFilters {
+    year: Int
+    category: String
+  }
+
+  type FacultyEmploymentStatus {
+    id: ID!
+    year: Int!
+    employmentStatus: String!
+    count: Int!
+  }
+
+  type FacultyEmploymentType {
+    id: ID!
+    year: Int!
+    employmentType: String!
+    count: Int!
+  }
+
+  type FacultyEducationalAttainment {
+    id: ID!
+    year: Int!
+    educationalAttainment: String!
+    count: Int!
+  }
+
+  type FacultyAcademicRank {
+    id: ID!
+    year: Int!
+    academicRank: String!
+    count: Int!
+  }
+
+  input FacultyProfileFilters {
+    year: Int
+    employmentStatus: String
+    employmentType: String
+    educationalAttainment: String
+    academicRank: String
+  }
+
   
   type Mutation {
     addOffering(year: Int!, type: String!, count: Int!): Offering
@@ -106,6 +181,36 @@ input GraduationFilters {
       program: String!
       accreditationCount: Int!
     ): Accreditation
+
+    addCopcProfile (
+      year: Int!
+      category: String!
+      count: Int!
+    ): Copc
+    
+    addFacultyEmploymentStatusProfile(
+      year: Int!
+      employmentStatus: String!
+      count: Int!
+    ): FacultyEmploymentStatus
+
+    addFacultyEmploymentTypeProfile(
+      year: Int!
+      employmentType: String!
+      count: Int!
+    ): FacultyEmploymentType
+
+    addFacultyEducationalAttainmentProfile(
+      year: Int!
+      educationalAttainment: String!
+      count: Int!
+    ): FacultyEducationalAttainment
+
+    addFacultyAcademicRankProfile(
+      year: Int!
+      academicRank: String!
+      count: Int!
+    ): FacultyAcademicRank
   }
 `;
 
@@ -168,6 +273,14 @@ type Graduation {
   year: Int!
   branch: String!
   graduateCount: Int!
+}
+
+type Copc {
+  id: ID!
+  year: Int!
+  category: String!
+  count: Int!
+
 }
 
 input GraduationFilters {

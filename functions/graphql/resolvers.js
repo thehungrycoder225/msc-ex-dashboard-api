@@ -2,6 +2,11 @@ const ProgramOffering = require('../models/offerings');
 const EnrollmentRate = require('../models/enrollment');
 const GraduationRates = require('../models/graduates')
 const AccreditationProfile = require('../models/accreditation')
+const CopcProfile = require('../models/copc')
+const { FacultyEmploymentStatus,
+  FacultyEmploymentType,
+  FacultyEducationalAttainment,
+  FacultyAcademicRank } = require('../models/facultyprofile');
 
 
 // Helper function to handle groupBy
@@ -73,50 +78,261 @@ const resolvers = {
         },
       ]);
     },
+    // Enrollment Profile
     getEnrollmentRates: async (_, { filters = {}, groupBy = [] }) => {
       const query = {};
+
       if (filters.year) query.year = filters.year;
       if (filters.branch) query.branch = filters.branch;
       if (filters.semester) query.semester = filters.semester;
 
-      const { group, project, sort } = handleGroupBy(groupBy, 'enrollmentRate');
+      if (groupBy.length === 0) {
+        return await EnrollmentRate.find(query);
+      } else {
+        const group = groupBy.reduce(
+          (acc, field) => ({ ...acc, [field]: `$${field}` }),
+          {}
+        );
 
-      return await EnrollmentRate.aggregate([
-        { $match: query },
-        { $group: { _id: group, enrollmentRate: { $sum: '$enrollmentRate' } } },
-        { $project: project },
-        { $sort: sort },
-      ]).lean();
+        const project = groupBy.reduce(
+          (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+          { _id: 0, enrollmentRate: 1 }
+        );
+
+        const sort = groupBy.reduce(
+          (acc, field) => ({ ...acc, [field]: 1 }),
+          {}
+        );
+
+        return await EnrollmentRate.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: group,
+              enrollmentRate: { $sum: '$enrollmentRate' },
+            },
+          },
+          { $project: { ...project, enrollmentRate: 1 } },
+          { $sort: sort },
+        ]);
+      }
     },
+
+    // Graduates Profile
     getGraduationRates: async (_, { filters = {}, groupBy = [] }) => {
       const query = {};
       if (filters.year) query.year = filters.year;
       if (filters.branch) query.branch = filters.branch;
 
-      const { group, project, sort } = handleGroupBy(groupBy, 'graduateCount');
+      if (groupBy.length === 0) {
+        return await GraduationRates.find(query);
+      }
+
+      const group = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$${field}` }),
+        {}
+      );
+
+      const project = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+        { _id: 0, graduateCount: 1 }
+      );
+
+      const sort = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: 1 }),
+        {}
+      );
 
       return await GraduationRates.aggregate([
         { $match: query },
-        { $group: { _id: group, graduateCount: { $sum: '$graduateCount' } } },
-        { $project: project },
+        {
+          $group: {
+            _id: group,
+            graduateCount: { $sum: '$graduateCount' },
+          },
+        },
+        { $project: { ...project, graduateCount: 1 } },
         { $sort: sort },
-      ]).lean();
+      ])
     },
-    getAccreditationProfile: async (_, { filters = {}, groupBy = [] }) => {
-      const query = {};
-      if (filters.category) query.category = filters.category;
-      if (filters.program) query.program = filters.program;
-      if (filters.year) query.year = filters.year;
 
-      const { group, project, sort } = handleGroupBy(groupBy, 'accreditationCount');
+
+    // Accreditation Profile
+    getAccreditationProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {}
+      if (filters.category) query.category = filters.category
+      if (filters.program) query.program = filters.program
+      if (filters.year) query.year = filters.year
+
+      if (groupBy.length === 0) {
+        return await AccreditationProfile.find(query)
+      }
+
+
+      const group = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$${field}` }),
+        {}
+      );
+
+      const project = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+        { _id: 0, accreditationCount: 1 }
+      );
+
+      const sort = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: 1 }),
+        {}
+      );
 
       return await AccreditationProfile.aggregate([
         { $match: query },
-        { $group: { _id: group, accreditationCount: { $sum: '$accreditationCount' } } },
+        {
+          $group: {
+            _id: group,
+            accreditationCount: { $sum: '$accreditationCount' },
+          },
+        },
+        { $project: { ...project, accreditationCount: 1 } },
+        { $sort: sort },
+      ])
+    },
+
+    // COPC Profile
+    getCopcProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {}
+      if (filters.year) query.year = filters.year
+      if (filters.category) query.category = filters.category
+
+      if (groupBy.length === 0) {
+        return await CopcProfile.find(query)
+      }
+
+      const group = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$${field}` }),
+        {}
+      );
+
+      const project = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+        { _id: 0, count: 1 }
+      );
+
+      const sort = groupBy.reduce(
+        (acc, field) => ({ ...acc, [field]: 1 }),
+        {}
+      );
+
+      return await CopcProfile.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: group,
+            count: { $sum: '$count' },
+          },
+        },
+        { $project: { ...project, count: 1 } },
+        { $sort: sort },
+      ])
+    },
+
+    // Faculty Profile
+
+    getFacultyEmploymentStatusProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {}
+      if (filters.year) query.year = filters.year
+      if (filters.employmentStatus) query.employmentStatus = filters.employmentStatus
+
+      if (groupBy.length === 0) {
+        return await FacultyEmploymentStatus.find(query)
+      }
+
+      const { group, project, sort } = handleGroupBy(groupBy, 'count');
+
+      return await FacultyEmploymentStatus.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: group,
+            count: { $sum: '$count' },
+          },
+        },
         { $project: project },
         { $sort: sort },
-      ]).lean();
+      ])
     },
+
+    getFacultyEmploymentTypeProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {}
+      if (filters.year) query.year = filters.year
+      if (filters.employmentType) query.employmentType = filters.employmentType
+
+      if (groupBy.length === 0) {
+        return await FacultyEmploymentType.find(query)
+      }
+
+      const { group, project, sort } = handleGroupBy(groupBy, 'count');
+
+      return await FacultyEmploymentType.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: group,
+            count: { $sum: '$count' },
+          },
+        },
+        { $project: project },
+        { $sort: sort },
+      ])
+    },
+
+    getFacultyEducationalAttainmentProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {}
+      if (filters.year) query.year = filters.year
+      if (filters.educationalAttainment) query.educationalAttainment = filters.educationalAttainment
+
+      if (groupBy.length === 0) {
+        return await FacultyEducationalAttainment.find(query)
+      }
+
+      const { group, project, sort } = handleGroupBy(groupBy, 'count');
+
+      return await FacultyEducationalAttainment.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: group,
+            count: { $sum: '$count' },
+          },
+        },
+        { $project: project },
+        { $sort: sort },
+      ])
+    },
+
+    getFacultyAcademicRankProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {}
+      if (filters.year) query.year = filters.year
+      if (filters.academicRank) query.academicRank = filters.academicRank
+
+      if (groupBy.length === 0) {
+        return await FacultyAcademicRank.find(query)
+      }
+
+      const { group, project, sort } = handleGroupBy(groupBy, 'count');
+
+      return await FacultyAcademicRank.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: group,
+            count: { $sum: '$count' },
+          },
+        },
+        { $project: project },
+        { $sort: sort },
+      ])
+    }
+
 
   },
   Mutation: {
@@ -136,6 +352,30 @@ const resolvers = {
       const newAccreditationProfile = new AccreditationProfile({ ...args });
       return await newAccreditationProfile.save();
     },
+    addCopcProfile: async (_, args) => {
+      const newCopcProfile = new CopcProfile({ ...args });
+      return await newCopcProfile.save();
+    },
+
+    addFacultyEmploymentStatusProfile: async (_, args) => {
+      const newFacultyEmploymentStatus = new FacultyEmploymentStatus({ ...args });
+      return await newFacultyEmploymentStatus.save();
+    },
+
+    addFacultyEmploymentTypeProfile: async (_, args) => {
+      const newFacultyEmploymentType = new FacultyEmploymentType({ ...args });
+      return await newFacultyEmploymentType.save();
+    },
+
+    addFacultyEducationalAttainmentProfile: async (_, args) => {
+      const newFacultyEducationalAttainment = new FacultyEducationalAttainment({ ...args });
+      return await newFacultyEducationalAttainment.save();
+    },
+
+    addFacultyAcademicRankProfile: async (_, args) => {
+      const newFacultyAcademicRank = new FacultyAcademicRank({ ...args });
+      return await newFacultyAcademicRank.save();
+    }
   },
 };
 
