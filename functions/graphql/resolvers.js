@@ -1,5 +1,35 @@
 const ProgramOffering = require('../models/offerings');
 const EnrollmentRate = require('../models/enrollment');
+const GraduationRates = require('../models/graduates')
+const AccreditationProfile = require('../models/accreditation')
+
+
+// Helper function to handle groupBy
+const handleGroupBy = (groupBy, countField) => {
+  if (groupBy.length === 0) {
+    return {};
+  }
+
+  const group = groupBy.reduce(
+    (acc, field) => ({ ...acc, [field]: `$${field}` }),
+    {}
+  );
+
+  const project = groupBy.reduce(
+    (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
+    { _id: 0, [countField]: 1 }
+  );
+
+  const sort = groupBy.reduce(
+    (acc, field) => ({ ...acc, [field]: 1 }),
+    {}
+  );
+
+  return { group, project, sort };
+};
+
+
+
 const resolvers = {
   Query: {
     // Program Offerings Profile
@@ -43,47 +73,51 @@ const resolvers = {
         },
       ]);
     },
-    // Enrollment Profile
     getEnrollmentRates: async (_, { filters = {}, groupBy = [] }) => {
       const query = {};
-
       if (filters.year) query.year = filters.year;
       if (filters.branch) query.branch = filters.branch;
       if (filters.semester) query.semester = filters.semester;
 
-      if (groupBy.length === 0) {
-        return await EnrollmentRate.find(query);
-      } else {
-        const group = groupBy.reduce(
-          (acc, field) => ({ ...acc, [field]: `$${field}` }),
-          {}
-        );
+      const { group, project, sort } = handleGroupBy(groupBy, 'enrollmentRate');
 
-        const project = groupBy.reduce(
-          (acc, field) => ({ ...acc, [field]: `$_id.${field}` }),
-          { _id: 0, enrollmentRate: 1 }
-        );
+      return await EnrollmentRate.aggregate([
+        { $match: query },
+        { $group: { _id: group, enrollmentRate: { $sum: '$enrollmentRate' } } },
+        { $project: project },
+        { $sort: sort },
+      ]).lean();
+    },
+    getGraduationRates: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {};
+      if (filters.year) query.year = filters.year;
+      if (filters.branch) query.branch = filters.branch;
 
-        const sort = groupBy.reduce(
-          (acc, field) => ({ ...acc, [field]: 1 }),
-          {}
-        );
+      const { group, project, sort } = handleGroupBy(groupBy, 'graduateCount');
 
-        return await EnrollmentRate.aggregate([
-          { $match: query },
-          {
-            $group: {
-              _id: group,
-              enrollmentRate: { $sum: '$enrollmentRate' },
-            },
-          },
-          { $project: { ...project, enrollmentRate: 1 } },
-          { $sort: sort },
-        ]);
-      }
+      return await GraduationRates.aggregate([
+        { $match: query },
+        { $group: { _id: group, graduateCount: { $sum: '$graduateCount' } } },
+        { $project: project },
+        { $sort: sort },
+      ]).lean();
+    },
+    getAccreditationProfile: async (_, { filters = {}, groupBy = [] }) => {
+      const query = {};
+      if (filters.category) query.category = filters.category;
+      if (filters.program) query.program = filters.program;
+      if (filters.year) query.year = filters.year;
+
+      const { group, project, sort } = handleGroupBy(groupBy, 'accreditationCount');
+
+      return await AccreditationProfile.aggregate([
+        { $match: query },
+        { $group: { _id: group, accreditationCount: { $sum: '$accreditationCount' } } },
+        { $project: project },
+        { $sort: sort },
+      ]).lean();
     },
 
-    // Graduates Profile
   },
   Mutation: {
     addOffering: async (_, args) => {
@@ -93,6 +127,14 @@ const resolvers = {
     addEnrollmentRate: async (_, args) => {
       const newEnrollmentRate = new EnrollmentRate({ ...args });
       return await newEnrollmentRate.save();
+    },
+    addGraduationRate: async (_, args) => {
+      const newGraduationRate = new GraduationRates({ ...args });
+      return await newGraduationRate.save();
+    },
+    addAccreditationProfile: async (_, args) => {
+      const newAccreditationProfile = new AccreditationProfile({ ...args });
+      return await newAccreditationProfile.save();
     },
   },
 };
