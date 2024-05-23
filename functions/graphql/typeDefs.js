@@ -92,7 +92,12 @@ enum GroupBy {
   month
   type
   scholarshipName
-
+  projectName
+  status
+  fundingType
+  title
+  author
+  count
 }
 
   type Offering {
