@@ -3,9 +3,10 @@ const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
 type Query {
-  offerings: [Offering]
-  totalOfferings(year: Int, type: String): Int
-  groupedOfferings(year: Int, type: String): [GroupedOffering]
+  getProgramOfferingsProfile(
+    filters: ProgramOfferingFilters
+    groupBy: [GroupBy]
+  ): [Offering]
 
   getEnrollmentRates(
     filters: EnrollmentFilters
@@ -47,14 +48,51 @@ type Query {
     groupBy: [GroupBy]
   ): [FacultyAcademicRank]
 
-}
+  getLicensureProfile(
+    filters: LicensureProfileFilters
+    groupBy: [GroupBy]
+  ): [LicensureProfile]
 
+  getScholarshipProfile(
+    filters: ScholarshipProfileFilters
+    groupBy: [GroupBy]
+  ): [ScholarshipProfile]
+  
+  getResearchProjectProfile(
+    filters: ResearchProjectProfileFilters
+    groupBy: [GroupBy]
+  ): [ResearchProjectProfile]
+
+  getPublicationProfile(
+    filters: PublicationProfileFilters
+    groupBy: [GroupBy]
+  ): [PublicationProfile]
+
+  getPresentationProfile(
+    filters: PresentationProfileFilters
+    groupBy: [GroupBy]
+  ): [PresentationProfile]
+
+  getCopyrightsProfile(
+    filters: CopyrightsProfileFilters
+    groupBy: [GroupBy]
+  ) : [CopyrightsProfile]
+}
 
 enum GroupBy {
   year
   branch
   semester
   category
+  program
+  employmentStatus
+  employmentType
+  educationalAttainment
+  academicRank
+  month
+  type
+  scholarshipName
+
 }
 
   type Offering {
@@ -64,10 +102,9 @@ enum GroupBy {
     count: Int!
   }
 
-  type GroupedOffering {
-    year: Int!
-    type: String!
-    count: Int!
+  input ProgramOfferingFilters {
+    year: Int
+    type: String
   }
 
   type Enrollment {
@@ -158,6 +195,98 @@ input GraduationFilters {
     academicRank: String
   }
 
+  type LicensureProfile {
+    id: ID!
+    year: Int!
+    month: String!
+    type: String!
+    passingRate: Float!
+    nationalPassingRate: Float!
+  }
+
+  input LicensureProfileFilters {
+    year: Int
+    month: String
+    type: String
+  }
+
+  type ScholarshipProfile {
+    id: ID!
+    year: Int!
+    scholarshipName: String!
+    scholarshipCount: Int!
+  }
+
+  input ScholarshipProfileFilters {
+    year: Int
+    scholarshipName: String
+  }
+
+  type ResearchProjectProfile {
+    id: ID!
+    year: Int!
+    category: String!
+    projectName: Int!
+    status: String!
+    type: String!
+    fundingType: String!
+  }
+
+  input ResearchProjectProfileFilters {
+    year: Int
+    category: String
+    projectName: String
+    status: String
+    type: String
+    fundingType: String
+  }
+
+  type PublicationProfile {
+    id: ID!
+    year: Int!
+    category: String!
+    title: String!
+    author: String!
+    type: String!
+  }
+
+  input PublicationProfileFilters {
+    year: Int
+    category: String
+    title: String
+    author: String
+    type: String
+  }
+
+  type PresentationProfile {
+    id: ID!
+    year: Int!
+    category: String!
+    title: String!
+  }
+
+  input PresentationProfileFilters {
+    year: Int
+    category: String
+    title: String
+  }
+
+  type CopyrightsProfile {
+    id: ID!
+    year: Int!
+    type: String!
+    title: String!
+    author: String!
+    registrationNo: String!
+  }
+
+  input CopyrightsProfileFilters {
+    year: Int
+    title: String
+    type: String!
+    author: String
+    registrationNo: String
+  }
   
   type Mutation {
     addOffering(year: Int!, type: String!, count: Int!): Offering
@@ -211,6 +340,51 @@ input GraduationFilters {
       academicRank: String!
       count: Int!
     ): FacultyAcademicRank
+
+    addLicensureProfile(
+      year: Int!
+      month: String!
+      type: String!
+      passingRate: Float!
+      nationalPassingRate: Float!
+    ): LicensureProfile
+
+    addScholarshipProfile(
+      year: Int!
+      scholarshipName: String!
+      scholarshipCount: Int!
+    ): ScholarshipProfile
+
+    addResearchProjectProfile(
+      year: Int!
+      category: String!
+      projectName: Int!
+      status: String!
+      type: String!
+      fundingType: String!
+    ): ResearchProjectProfile
+
+    addPublicationProfile(
+      year: Int!
+      category: String!
+      title: String!
+      author: String!
+      type: String!
+    ): PublicationProfile
+
+    addPresentationProfile(
+      year: Int!
+      category: String!
+      title: String!
+    ): PresentationProfile
+
+    addCopyrightsProfile(
+      year: Int!
+      type: String!
+      title: String!
+      author: String!
+      registrationNo: String!
+    ): CopyrightsProfile
   }
 `;
 
