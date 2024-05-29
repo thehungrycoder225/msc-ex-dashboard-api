@@ -17,6 +17,7 @@
     "@graphql-codegen/introspection": "^4.0.3",
     "@types/aws-lambda": "^8.10.138",
     "apollo-server": "^3.13.0",
+    "apollo-server-express": "^3.13.0",
     "apollo-server-lambda": "^3.13.0",
     "aws-lambda": "^1.0.7",
     "cors": "^2.8.5",
