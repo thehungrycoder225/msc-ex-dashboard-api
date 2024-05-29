@@ -35,7 +35,8 @@ const handleServerStart = async () => {
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 };
+
 handleServerStart();
 app.use(cors());
-// server.use('/.netlify/functions/api/graphql');
+
 module.exports.handler = serverless(app);
