@@ -10,7 +10,7 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 app.use(cors());
-app.use('/.netlify/functions/api/graphql', serverless(app));
+app.use('/.netlify/functions/api/graphql');
 
 dotenv.config();
 dbConnect();
@@ -22,3 +22,4 @@ const { url } = startStandaloneServer(server, {
 });
 console.log(`🚀  Server ready at ${url}`);
 // server.use('/.netlify/functions/api/graphql');
+module.exports.handler = serverless(app);
