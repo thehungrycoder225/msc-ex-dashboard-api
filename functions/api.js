@@ -1,29 +1,24 @@
-const { createHandler } = require('graphql-http/lib/use/express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const { typeDefs } = require('./graphql/typeDefs');
-const resolvers = require('./graphql/resolvers');
-const logger = require('./utils/logger');
 const { dbConnect } = require('./config/db');
+const resolvers = require('./graphql/resolvers');
+const { ApolloServer } = require('@apollo/server');
+const { startStandaloneServer } = require('@apollo/server/standalone');
+const logger = require('./utils/logger');
+const dotenv = require('dotenv');
 const serverless = require('serverless-http');
-const { ApolloServer } = require('apollo-server');
+const cors = require('cors');
+const express = require('express');
+const app = express();
+app.use(cors());
+app.use('/.netlify/functions/api/graphql', serverless(app));
 
 dotenv.config();
 dbConnect();
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: ({ req }) => ({ req }),
+const server = new ApolloServer({ typeDefs, resolvers });
+const { url } = startStandaloneServer(server, {
+  context: async ({ req }) => ({ token: req.headers.token }),
+  listen: { port: 4000 },
 });
-
+console.log(`🚀  Server ready at ${url}`);
 // server.use('/.netlify/functions/api/graphql');
-
-server.listen().then(({ url }) => {
-  console.log({
-    message: `Server ready at ${url}`,
-    api: `API ready at ${url}/graphql`,
-  });
-});
-
-module.exports.handler = serverless(app);
