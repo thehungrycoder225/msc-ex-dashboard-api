@@ -27,7 +27,11 @@ const server = new ApolloServer({
 const handleServerStart = async () => {
   await server.start();
 
-  app.use('/graphql', express.json(), expressMiddleware(server));
+  app.use(
+    '/.netlify/functions/api/graphql',
+    express.json(),
+    expressMiddleware(server)
+  );
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
   console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 };
